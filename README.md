@@ -37,3 +37,11 @@ A temperature controller for Sous vide method
 	R to temperature formula
 	T = (Rrtd - 100)* 0.3851
 	```
+- You can change target temperature and read current temperature by using serial console
+	Serial console set to 115200,n,8,1
+	
+	```
+	s=? query target temperature
+  	s=70 set target temperature to 70 degree C	
+	t=? query target temperature
+	```
