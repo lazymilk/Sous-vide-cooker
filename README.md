@@ -2,14 +2,17 @@
 A temperature controller for Sous vide method
 
 
-#You can change RTD input analog and releay control output pin by change define macros below
+##You can change RTD input analog and releay control output pin by change define macros below
+...
  define RELAY_PIN (9)
  define ADC_PIN (0)
-
-#Change target temperature by change define macro below 
+...
+##Change target temperature by change define macro below 
+...
  define DEFAULT_TARGET_TEMPE (60.0)
-
-#The RDT convert principle and formula
+...
+##The RDT convert principle and formula
+...
  define R1 (250.0) <-- the shunt resister
  define ADC_MAX (1023.0) <-- ADC resolution
 
@@ -30,3 +33,4 @@ A temperature controller for Sous vide method
 
 	R to temperature formula
 	T = (Rrtd - 100)* 0.3851
+...
