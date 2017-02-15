@@ -3,22 +3,28 @@
 #define DISABLE                         (0)
 
 /* function configuration */
-#define SOUS_VIDE_CONFIG_LCD_KEYPAD     DISABLE
+#define SOUS_VIDE_CONFIG_LCD_KEYPAD     ENABLE
 #define SOUS_VIDE_CONFIG_UART_DEBUG     ENABLE
 #define SOUS_VIDE_CONFIG_UART_COMM      ENABLE
+#define SOUS_VIDE_CONFIG_OPAMP          ENABLE
 
 /* hardware configuration */
-#define SOUS_VIDE_RELAY_PIN             (9)
-#define SOUS_VIDE_ADC_PIN               (0)
+#define SOUS_VIDE_RELAY_PIN             (3)
+#define SOUS_VIDE_ADC_PIN               (1)
 #define SOUS_VIDE_BUTTON_PIN            (0)
 #define SOUS_VIDE_TITLE                 "Attic Sous Vide"
 #define SOUS_VIDE_DIGITAL_FILTER        ENABLE
-#define SOUS_VIDE_VOLTAGE_BASIC         (105)           /* unit: mV */
+#define SOUS_VIDE_VOLTAGE_BASIC         (0.105)         /* unit: V */
 #define SOUS_VIDE_VOLTAGE_OFFSET        (0.12)          /* unit: V */
 #define SOUS_VIDE_VOLTAGE_GAIN          (101)
-#define SOUS_VIDE_RESISTOR_DEGREE       (0.3851)
+#define SOUS_VIDE_RESISTOR_DEGREE       (0.3851)        /*  */
+#define SOUS_VIDE_R1                    (250.0)
+#define SOUS_VIDE_ADC_MAX               (1023.0)
+#define SOUS_VIDE_VDD_VOLTAGE           (5.0)
 
 /* software configuration */
+#define SOUS_VIDE_DIGITAL_FILTER        ENABLE
+#define SOUS_VIDE_BUFFER_SIZE           (10)
 #define SOUS_VIDE_TARGET_TEMPERATURE    (60.0)
 #define SOUS_VIDE_CONTROL_IGNORE_REGION (2.0)
 
