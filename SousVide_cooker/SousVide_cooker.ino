@@ -3,6 +3,7 @@
 #include <LiquidCrystal.h>
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
+int key_event = LCD_KEYPAD_NONE;
 #endif
 
 String command;
@@ -33,8 +34,6 @@ void loop() {
   // put your main code here, to run repeatedly:
   static long tm;
   static int init_flag = 1;
-  static int update_flag = 0;
-  const char degree = 0xdf;
 
   if (init_flag == 1)
   {
@@ -58,6 +57,8 @@ void loop() {
   }
 #endif
 
+  menuTask();
+  
   //LOOP control in 0.1S period
   if ((millis() - tm) > 100)
   {
@@ -73,33 +74,16 @@ void loop() {
       }
       cnt = 0;
       current_temperature /= SOUS_VIDE_BUFFER_SIZE;
-      update_flag = 1;
+
     }
 #else
     current_temperature = getTemperature(analogRead(SOUS_VIDE_ADC_PIN));
-    update_flag = 1;
+
 #endif
 
-  }
-
-  if (update_flag) {
-    update_flag = 0;
-#if (SOUS_VIDE_CONFIG_LCD_KEYPAD == ENABLE)
-    lcd.setCursor(0, 1);
-    if (fahrenheit) {
-      current_temperature = current_temperature * 9 / 5 + 32;
-      lcd.print(current_temperature, 1);
-      lcd.print(degree);
-      lcd.print('F');
-    } else {
-      lcd.print(current_temperature, 1);
-      lcd.print(degree);
-      lcd.print('C');
-    }
-#endif
     //PID calculate
     //Output
-    if (current_temperature >= target_temperature)
+    if (current_temperature >= (target_temperature + SOUS_VIDE_CONTROL_IGNORE_REGION))
     {
       digitalWrite(SOUS_VIDE_RELAY_PIN, LOW);
     }
@@ -108,27 +92,8 @@ void loop() {
       digitalWrite(SOUS_VIDE_RELAY_PIN, HIGH);
     }
   }
+
 }
-
-#if (SOUS_VIDE_CONFIG_LCD_KEYPAD == ENABLE)
-int getButtons()
-{
-  int adc_key_in  = 1023;
-  adc_key_in = analogRead(SOUS_VIDE_BUTTON_PIN);
-  // my buttons when read are centered at these valies: 0, 144, 329, 504, 741
-  // we add approx 50 to those values and check to see if we are close
-  // We make this the 1st option for speed reasons since it will be the most likely result
-  if (adc_key_in > LCD_KEYPAD_NONE_THRESHOLD) return LCD_KEYPAD_NONE;
-  if (adc_key_in < LCD_KEYPAD_RIGHT_THRESHOLD)   return LCD_KEYPAD_RIGHT;
-  if (adc_key_in < LCD_KEYPAD_UP_THRESHOLD)  return LCD_KEYPAD_UP;
-  if (adc_key_in < LCD_KEYPAD_DOWN_THRESHOLD)  return LCD_KEYPAD_DOWN;
-  if (adc_key_in < LCD_KEYPAD_LEFT_THRESHOLD)  return LCD_KEYPAD_LEFT;
-  if (adc_key_in < LCD_KEYPAD_SELECT_THRESHOLD)  return LCD_KEYPAD_SELECT;
-
-  return LCD_KEYPAD_NONE;  // when all others fail, return this...
-}
-#endif
-
 
 #if (SOUS_VIDE_CONFIG_UART_COMM == ENABLE)
 void parseCommand(String com)

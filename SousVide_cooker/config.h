@@ -17,16 +17,18 @@
 #define SOUS_VIDE_VOLTAGE_BASIC         (0.105)         /* unit: V */
 #define SOUS_VIDE_VOLTAGE_OFFSET        (0.12)          /* unit: V */
 #define SOUS_VIDE_VOLTAGE_GAIN          (101)
-#define SOUS_VIDE_RESISTOR_DEGREE       (0.3851)        /*  */
+#define SOUS_VIDE_RESISTOR_DEGREE       (0.3851)        /* raise resistor pre drgree */
 #define SOUS_VIDE_R1                    (250.0)
 #define SOUS_VIDE_ADC_MAX               (1023.0)
 #define SOUS_VIDE_VDD_VOLTAGE           (5.0)
+#define SOUS_VIDE_BUTTON_DELAY          (30)            /* unit: ms */
 
 /* software configuration */
 #define SOUS_VIDE_DIGITAL_FILTER        ENABLE
 #define SOUS_VIDE_BUFFER_SIZE           (10)
-#define SOUS_VIDE_TARGET_TEMPERATURE    (60.0)
-#define SOUS_VIDE_CONTROL_IGNORE_REGION (2.0)
+#define SOUS_VIDE_TARGET_TEMPERATURE    (60.0)          /* unit: degree C */
+#define SOUS_VIDE_CONTROL_IGNORE_REGION (1.2)           /* unit: degree C */
+#define SOUS_VIDE_DEFAULT_TIME          (60)            /* unit: minute */
 
 /* LCD keypad shiled definition */
 #define LCD_KEYPAD_RIGHT                0
@@ -50,6 +52,11 @@
 #define LCD_KEYPAD_SELECT_THRESHOLD     790
  */
 #define LCD_KEYPAD_NONE_THRESHOLD       1000
+
+#define KEY_STATE_IDLE      0
+#define KEY_STATE_PUSH      1
+#define KEY_STATE_HOLD      2
+#define KEY_STATE_RELEASE   3
 
 
 
