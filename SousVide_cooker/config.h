@@ -21,7 +21,7 @@
 #define SOUS_VIDE_R1                    (250.0)
 #define SOUS_VIDE_ADC_MAX               (1023.0)
 #define SOUS_VIDE_VDD_VOLTAGE           (5.0)
-#define SOUS_VIDE_BUTTON_DELAY          (30)            /* unit: ms */
+#define SOUS_VIDE_BUTTON_DELAY          (40)            /* unit: ms */
 
 /* software configuration */
 #define SOUS_VIDE_DIGITAL_FILTER        ENABLE

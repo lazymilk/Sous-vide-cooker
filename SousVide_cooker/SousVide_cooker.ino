@@ -10,6 +10,8 @@ String command;
 float current_temperature = 0;
 float target_temperature = SOUS_VIDE_TARGET_TEMPERATURE;
 int heating_time = SOUS_VIDE_DEFAULT_TIME;
+int running_flag = 0;
+long target_timestamp = 0;
 
 #if (SOUS_VIDE_DIGITAL_FILTER == ENABLE)
 float temp_buff[SOUS_VIDE_BUFFER_SIZE];
@@ -60,7 +62,7 @@ void loop() {
 #endif
 
   menuTask();
-  
+
   //LOOP control in 0.1S period
   if ((millis() - tm) > 100)
   {
@@ -83,16 +85,25 @@ void loop() {
 
 #endif
 
-    //PID calculate
-    //Output
-    if (current_temperature >= (target_temperature + SOUS_VIDE_CONTROL_IGNORE_REGION))
-    {
-      digitalWrite(SOUS_VIDE_RELAY_PIN, LOW);
+    if (running_flag) {
+      //PID calculate
+      //Output
+      if (current_temperature >= (target_temperature + SOUS_VIDE_CONTROL_IGNORE_REGION))
+      {
+        digitalWrite(SOUS_VIDE_RELAY_PIN, LOW);
+      }
+      else if (current_temperature < (target_temperature - SOUS_VIDE_CONTROL_IGNORE_REGION))
+      {
+        digitalWrite(SOUS_VIDE_RELAY_PIN, HIGH);
+      }
+
+      if (millis() > target_timestamp) {
+        running_flag = 0;
+        target_timestamp = 0;
+        digitalWrite(SOUS_VIDE_RELAY_PIN, LOW);
+      }
     }
-    else if (current_temperature < (target_temperature - SOUS_VIDE_CONTROL_IGNORE_REGION))
-    {
-      digitalWrite(SOUS_VIDE_RELAY_PIN, HIGH);
-    }
+
   }
 
 }
@@ -196,4 +207,6 @@ float getTemperature(int adc)
 #endif
   return tempe;
 }
+
+
 

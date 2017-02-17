@@ -73,25 +73,20 @@ int keyTask()
   }
 }
 
-void my_itoa(int value, char* target)
+void calcRestTime(long target, char *str)
 {
-  if (target == NULL) {
-    return;
-  }
+  long temp_tm = (target - millis()) / 1000;   /* in sec */
+  int temp_min, temp_sec;
   
-  target[2] = value % 10 + 0x30;
-  target[1] = (value / 10) % 10 + 0x30;
-  target[0] = (value / 100) % 10 + 0x30;
-  target[3] = '\0';
-}
-
-void my_atoi(int *value, char* target)
-{
-  if ((target == NULL) || (value == NULL)) {
+  if (str == NULL) {
     return;
   }
 
-  *value = (target[0] - 0x30) * 100 + (target[1] - 0x30) * 10 + (target[2] - 0x30);
+  /* rest min =  */
+  temp_min = temp_tm / 60;
+  temp_sec = temp_tm % 60;
+  sprintf(str, "%03d:%02d", temp_min, temp_sec);
+  return;
 }
 
 int menuTask()
@@ -100,9 +95,9 @@ int menuTask()
   static int menu_tm = millis();
   const char degree = 0xdf;
   float f = 0;
-  int temp_value;
   char set_value[4];
   static int curosr;
+  char str[16];
 
   keyTask();
 
@@ -110,7 +105,7 @@ int menuTask()
     default:
     case MENU_STATE_MAIN:
       /* refresh screen */
-      if ((millis() - menu_tm) >= 500) {
+      if ((millis() - menu_tm) >= 1000) {
         menu_tm = millis();
         lcd.setCursor(0, 1);
         if (fahrenheit) {
@@ -119,9 +114,17 @@ int menuTask()
           lcd.print(degree);
           lcd.print('F');
         } else {
-          lcd.print(current_temperature, 1);
+          lcd.print(current_temperature);
           lcd.print(degree);
           lcd.print('C');
+        }
+        lcd.setCursor(10, 1);
+        if (running_flag) {
+          /* print rest of time */
+          calcRestTime(target_timestamp, str);
+          lcd.print(str);
+        } else {
+          lcd.print(" Idle ");
         }
       }
 
@@ -173,8 +176,7 @@ int menuTask()
         } else if (key_event == LCD_KEYPAD_SELECT) {
           /* chage to set time page */
           menu_state = MENU_STATE_TIME_SET;
-          temp_value = heating_time;
-          my_itoa(temp_value, set_value);
+          sprintf(set_value, "%03d", heating_time);
 
           lcd.clear();
           lcd.blink();
@@ -218,9 +220,8 @@ int menuTask()
           if (curosr < 7) curosr = 7;
         } else if (key_event == LCD_KEYPAD_SELECT) {
           /* save the value and turn back */
-          my_atoi(&temp_value, set_value);
           /* FIXME: check the value range */
-          heating_time = temp_value;
+          heating_time = atoi(set_value);
           menu_state = MENU_STATE_TIME;
           key_event = LCD_KEYPAD_NONE;
 
@@ -269,8 +270,7 @@ int menuTask()
         } else if (key_event == LCD_KEYPAD_SELECT) {
           /* chage to set temperature page */
           menu_state = MENU_STATE_TEMPERATURE_SET;
-          temp_value = target_temperature;
-          my_itoa(temp_value, set_value);
+          sprintf(set_value, "%03d", (int)target_temperature);
 
           lcd.clear();
           lcd.cursor();
@@ -315,9 +315,8 @@ int menuTask()
           if (curosr < 7) curosr = 7;
         } else if (key_event == LCD_KEYPAD_SELECT) {
           /* save the value and turn back */
-          my_atoi(&temp_value, set_value);
           /* FIXME: check the value range */
-          target_temperature = temp_value;
+          target_temperature = (float)atoi(set_value);
           menu_state = MENU_STATE_TEMPERATURE;
           key_event = LCD_KEYPAD_NONE;
 
@@ -382,16 +381,21 @@ int menuTask()
       break;
 
     case MENU_STATE_START_SET:
-    /* handle the key event */
+      /* handle the key event */
       if (key_event != LCD_KEYPAD_NONE) {
         if ((key_event == LCD_KEYPAD_RIGHT) || (key_event == LCD_KEYPAD_LEFT)) {
           /* move the cursor */
-          curosr = (curosr >= 8)?(2):(10);
+          curosr = (curosr >= 8) ? (2) : (10);
         } else if (key_event == LCD_KEYPAD_SELECT) {
-          /* save the value and turn back */
-          my_atoi(&temp_value, set_value);
-          /* FIXME: check the value range */
-          target_temperature = temp_value;
+          if (curosr == 10) {
+            /* yes */
+            running_flag = (running_flag) ? (0) : (1);
+            if (running_flag) {
+              target_timestamp = millis() + (long)heating_time * 60 * 1000;
+            } else {
+              target_timestamp = 0;
+            }
+          }
           menu_state = MENU_STATE_START;
           key_event = LCD_KEYPAD_NONE;
 
