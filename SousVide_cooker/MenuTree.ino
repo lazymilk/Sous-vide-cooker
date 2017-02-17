@@ -5,6 +5,7 @@
 #define MENU_STR_TIME       "    Set Time    "
 #define MENU_STR_TEMP       "Set Temperature "
 #define MENU_STR_START      "    Get Start   "
+#define MENU_STR_YES_NO     " ( )NO   ( )YES "
 
 enum {
   MENU_STATE_MAIN = 0,
@@ -77,19 +78,20 @@ void my_itoa(int value, char* target)
   if (target == NULL) {
     return;
   }
-
-  target[2] = value % 10 + 30;
-  target[1] = (value / 10) % 10 + 30;
-  target[0] = (value / 100) % 10 + 30;
+  
+  target[2] = value % 10 + 0x30;
+  target[1] = (value / 10) % 10 + 0x30;
+  target[0] = (value / 100) % 10 + 0x30;
+  target[3] = '\0';
 }
 
-void my_atoi(int value, char* target)
+void my_atoi(int *value, char* target)
 {
-  if (target == NULL) {
+  if ((target == NULL) || (value == NULL)) {
     return;
   }
 
-  value = (target[0] - 30) * 100 + (target[1] - 30) * 10 + (target[2] - 30);
+  *value = (target[0] - 0x30) * 100 + (target[1] - 0x30) * 10 + (target[2] - 0x30);
 }
 
 int menuTask()
@@ -99,7 +101,7 @@ int menuTask()
   const char degree = 0xdf;
   float f = 0;
   int temp_value;
-  char set_value[3];
+  char set_value[4];
   static int curosr;
 
   keyTask();
@@ -108,12 +110,12 @@ int menuTask()
     default:
     case MENU_STATE_MAIN:
       /* refresh screen */
-      if ((millis() - menu_tm) > 500) {
+      if ((millis() - menu_tm) >= 500) {
         menu_tm = millis();
         lcd.setCursor(0, 1);
         if (fahrenheit) {
           f = current_temperature * 9 / 5 + 32;
-          lcd.print(f, 1);
+          lcd.print(f);
           lcd.print(degree);
           lcd.print('F');
         } else {
@@ -170,12 +172,73 @@ int menuTask()
           lcd.print(MENU_STR_START);
         } else if (key_event == LCD_KEYPAD_SELECT) {
           /* chage to set time page */
+          menu_state = MENU_STATE_TIME_SET;
+          temp_value = heating_time;
+          my_itoa(temp_value, set_value);
+
+          lcd.clear();
+          lcd.blink();
+          lcd.setCursor(0, 0);
+          lcd.print(MENU_STR_TIME);
+          lcd.setCursor(7, 1);
+          lcd.print(set_value);
+          lcd.setCursor(7, 1);
+          curosr = 7;
         }
         key_event = LCD_KEYPAD_NONE;
       }
       break;
 
     case MENU_STATE_TIME_SET:
+      /* handle the key event */
+      if (key_event != LCD_KEYPAD_NONE) {
+        if (key_event == LCD_KEYPAD_UP) {
+          /* count up */
+          set_value[curosr - 7] += 1;
+          if (set_value[curosr - 7] > '9') {
+            set_value[curosr - 7] = '0';
+          } else if (set_value[curosr - 7] < '0') {
+            set_value[curosr - 7] = '9';
+          }
+        } else if (key_event == LCD_KEYPAD_DOWN) {
+          /* count down */
+          set_value[curosr - 7] -= 1;
+          if (set_value[curosr - 7] > '9') {
+            set_value[curosr - 7] = '0';
+          } else if (set_value[curosr - 7] < '0') {
+            set_value[curosr - 7] = '9';
+          }
+        } else if (key_event == LCD_KEYPAD_RIGHT) {
+          /* move the cursor */
+          curosr += 1;
+          if (curosr > 9) curosr = 9;
+        } else if (key_event == LCD_KEYPAD_LEFT) {
+          /* move the cursor */
+          curosr -= 1;
+          if (curosr < 7) curosr = 7;
+        } else if (key_event == LCD_KEYPAD_SELECT) {
+          /* save the value and turn back */
+          my_atoi(&temp_value, set_value);
+          /* FIXME: check the value range */
+          heating_time = temp_value;
+          menu_state = MENU_STATE_TIME;
+          key_event = LCD_KEYPAD_NONE;
+
+          lcd.clear();
+          lcd.noBlink();
+          lcd.setCursor(0, 0);
+          lcd.print(MENU_STR_MENU);
+          lcd.setCursor(0, 1);
+          lcd.print(MENU_STR_TIME);
+          break;
+        }
+        key_event = LCD_KEYPAD_NONE;
+
+        /* update screen */
+        lcd.setCursor(7, 1);
+        lcd.print(set_value);
+        lcd.setCursor(curosr, 1);
+      }
       break;
 
     case MENU_STATE_TEMPERATURE:
@@ -205,14 +268,76 @@ int menuTask()
           lcd.print(MENU_STR_TIME);
         } else if (key_event == LCD_KEYPAD_SELECT) {
           /* chage to set temperature page */
+          menu_state = MENU_STATE_TEMPERATURE_SET;
+          temp_value = target_temperature;
+          my_itoa(temp_value, set_value);
+
+          lcd.clear();
+          lcd.cursor();
+          lcd.blink();
+          lcd.setCursor(0, 0);
+          lcd.print(MENU_STR_TEMP);
+          lcd.setCursor(7, 1);
+          lcd.print(set_value);
+          lcd.setCursor(7, 1);
+          curosr = 7;
         }
         key_event = LCD_KEYPAD_NONE;
       }
       break;
 
     case MENU_STATE_TEMPERATURE_SET:
-    break;
-    
+      /* handle the key event */
+      if (key_event != LCD_KEYPAD_NONE) {
+        if (key_event == LCD_KEYPAD_UP) {
+          /* count up */
+          set_value[curosr - 7] += 1;
+          if (set_value[curosr - 7] > '9') {
+            set_value[curosr - 7] = '0';
+          } else if (set_value[curosr - 7] < '0') {
+            set_value[curosr - 7] = '9';
+          }
+        } else if (key_event == LCD_KEYPAD_DOWN) {
+          /* count down */
+          set_value[curosr - 7] -= 1;
+          if (set_value[curosr - 7] > '9') {
+            set_value[curosr - 7] = '0';
+          } else if (set_value[curosr - 7] < '0') {
+            set_value[curosr - 7] = '9';
+          }
+        } else if (key_event == LCD_KEYPAD_RIGHT) {
+          /* move the cursor */
+          curosr += 1;
+          if (curosr > 9) curosr = 9;
+        } else if (key_event == LCD_KEYPAD_LEFT) {
+          /* move the cursor */
+          curosr -= 1;
+          if (curosr < 7) curosr = 7;
+        } else if (key_event == LCD_KEYPAD_SELECT) {
+          /* save the value and turn back */
+          my_atoi(&temp_value, set_value);
+          /* FIXME: check the value range */
+          target_temperature = temp_value;
+          menu_state = MENU_STATE_TEMPERATURE;
+          key_event = LCD_KEYPAD_NONE;
+
+          lcd.clear();
+          lcd.noBlink();
+          lcd.setCursor(0, 0);
+          lcd.print(MENU_STR_MENU);
+          lcd.setCursor(0, 1);
+          lcd.print(MENU_STR_TEMP);
+          break;
+        }
+        key_event = LCD_KEYPAD_NONE;
+
+        /* update screen */
+        lcd.setCursor(7, 1);
+        lcd.print(set_value);
+        lcd.setCursor(curosr, 1);
+      }
+      break;
+
     case MENU_STATE_START:
       /* handle the key event */
       if (key_event != LCD_KEYPAD_NONE) {
@@ -240,13 +365,50 @@ int menuTask()
           lcd.print(MENU_STR_TEMP);
         } else if (key_event == LCD_KEYPAD_SELECT) {
           /* chage to start page */
+          menu_state = MENU_STATE_START_SET;
+
+          lcd.clear();
+          lcd.cursor();
+          lcd.blink();
+          lcd.setCursor(0, 0);
+          lcd.print(MENU_STR_TEMP);
+          lcd.setCursor(0, 1);
+          lcd.print(MENU_STR_YES_NO);
+          curosr = 2;
+          lcd.setCursor(2, 1);
         }
         key_event = LCD_KEYPAD_NONE;
       }
       break;
-      
+
     case MENU_STATE_START_SET:
-    break;
+    /* handle the key event */
+      if (key_event != LCD_KEYPAD_NONE) {
+        if ((key_event == LCD_KEYPAD_RIGHT) || (key_event == LCD_KEYPAD_LEFT)) {
+          /* move the cursor */
+          curosr = (curosr >= 8)?(2):(10);
+        } else if (key_event == LCD_KEYPAD_SELECT) {
+          /* save the value and turn back */
+          my_atoi(&temp_value, set_value);
+          /* FIXME: check the value range */
+          target_temperature = temp_value;
+          menu_state = MENU_STATE_START;
+          key_event = LCD_KEYPAD_NONE;
+
+          lcd.clear();
+          lcd.noBlink();
+          lcd.setCursor(0, 0);
+          lcd.print(MENU_STR_MENU);
+          lcd.setCursor(0, 1);
+          lcd.print(MENU_STR_START);
+          break;
+        }
+        key_event = LCD_KEYPAD_NONE;
+
+        /* update screen */
+        lcd.setCursor(curosr, 1);
+      }
+      break;
   }
 }
 

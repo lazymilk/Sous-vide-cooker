@@ -9,6 +9,8 @@ int key_event = LCD_KEYPAD_NONE;
 String command;
 float current_temperature = 0;
 float target_temperature = SOUS_VIDE_TARGET_TEMPERATURE;
+int heating_time = SOUS_VIDE_DEFAULT_TIME;
+
 #if (SOUS_VIDE_DIGITAL_FILTER == ENABLE)
 float temp_buff[SOUS_VIDE_BUFFER_SIZE];
 #endif

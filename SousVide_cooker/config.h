@@ -4,7 +4,7 @@
 
 /* function configuration */
 #define SOUS_VIDE_CONFIG_LCD_KEYPAD     ENABLE
-#define SOUS_VIDE_CONFIG_UART_DEBUG     ENABLE
+#define SOUS_VIDE_CONFIG_UART_DEBUG     DISABLE
 #define SOUS_VIDE_CONFIG_UART_COMM      ENABLE
 #define SOUS_VIDE_CONFIG_OPAMP          ENABLE
 
