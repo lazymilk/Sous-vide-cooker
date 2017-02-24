@@ -1,10 +1,13 @@
 #if (SOUS_VIDE_CONFIG_LCD_KEYPAD == ENABLE)
 
+#include <EEPROM.h>
+
 #define MENU_STR_TITLE      "Attic Sous Vide "
 #define MENU_STR_MENU       "      MENU      "
 #define MENU_STR_TIME       "    Set Time    "
 #define MENU_STR_TEMP       "Set Temperature "
 #define MENU_STR_START      "    Get Start   "
+#define MENU_STR_ABORT      "      Abort?    "
 #define MENU_STR_YES_NO     " ( )NO   ( )YES "
 
 enum {
@@ -77,7 +80,7 @@ void calcRestTime(long target, char *str)
 {
   long temp_tm = (target - millis()) / 1000;   /* in sec */
   int temp_min, temp_sec;
-  
+
   if (str == NULL) {
     return;
   }
@@ -95,6 +98,7 @@ int menuTask()
   static int menu_tm = millis();
   const char degree = 0xdf;
   float f = 0;
+  int temp;
   char set_value[4];
   static int curosr;
   char str[16];
@@ -219,9 +223,12 @@ int menuTask()
           curosr -= 1;
           if (curosr < 7) curosr = 7;
         } else if (key_event == LCD_KEYPAD_SELECT) {
-          /* save the value and turn back */
-          /* FIXME: check the value range */
-          heating_time = atoi(set_value);
+          temp = atoi(set_value);
+          if ((temp >= SOUS_VIDE_TIME_MIN) && (temp <= SOUS_VIDE_TIME_MAX)) {
+            /* save the value and turn back */
+            EEPROM.put(SOUS_VIDE_EEPROM_ADDR_TIME, temp);
+            heating_time = temp;
+          }
           menu_state = MENU_STATE_TIME;
           key_event = LCD_KEYPAD_NONE;
 
@@ -314,9 +321,12 @@ int menuTask()
           curosr -= 1;
           if (curosr < 7) curosr = 7;
         } else if (key_event == LCD_KEYPAD_SELECT) {
-          /* save the value and turn back */
-          /* FIXME: check the value range */
-          target_temperature = (float)atoi(set_value);
+          temp = atoi(set_value);
+          if ((temp >= SOUS_VIDE_TEMPERATURE_MIN) && (temp <= SOUS_VIDE_TEMPERATURE_MAX)) {
+            /* save the value and turn back */
+            EEPROM.put(SOUS_VIDE_EEPROM_ADDR_TEMPERATURE, temp);
+            target_temperature = (float)temp;
+          }
           menu_state = MENU_STATE_TEMPERATURE;
           key_event = LCD_KEYPAD_NONE;
 
@@ -370,7 +380,11 @@ int menuTask()
           lcd.cursor();
           lcd.blink();
           lcd.setCursor(0, 0);
-          lcd.print(MENU_STR_TEMP);
+          if (running_flag) {
+            lcd.print(MENU_STR_ABORT);
+          } else {
+            lcd.print(MENU_STR_START);
+          }
           lcd.setCursor(0, 1);
           lcd.print(MENU_STR_YES_NO);
           curosr = 2;

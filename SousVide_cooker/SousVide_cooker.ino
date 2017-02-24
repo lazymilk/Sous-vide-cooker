@@ -1,4 +1,5 @@
 #include "config.h"
+#include <EEPROM.h>
 #if (SOUS_VIDE_CONFIG_LCD_KEYPAD == ENABLE)
 #include <LiquidCrystal.h>
 
@@ -18,9 +19,29 @@ float temp_buff[SOUS_VIDE_BUFFER_SIZE];
 #endif
 char fahrenheit = 0;    // centigrade / fahrenheit
 
+void getConfig()
+{
+    int temp;
+    EEPROM.get(SOUS_VIDE_EEPROM_ADDR_TEMPERATURE, temp);
+    if ((temp > SOUS_VIDE_TEMPERATURE_MAX) || (temp < SOUS_VIDE_TEMPERATURE_MIN)) {
+        target_temperature = SOUS_VIDE_TARGET_TEMPERATURE;
+    } else {
+        target_temperature = temp;
+    }
+
+    EEPROM.get(SOUS_VIDE_EEPROM_ADDR_TIME, temp);
+    if ((temp > SOUS_VIDE_TIME_MAX) || (temp < SOUS_VIDE_TIME_MIN)) {
+        heating_time = SOUS_VIDE_DEFAULT_TIME;
+    } else {
+        heating_time = temp;
+    }
+    
+}
+
 void setup() {
   /* initial serial */
   Serial.begin(115200);
+  getConfig();
 
 #if (SOUS_VIDE_CONFIG_LCD_KEYPAD == ENABLE)
   /* initial lcd keypad shield */

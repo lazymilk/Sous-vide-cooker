@@ -59,5 +59,12 @@
 #define KEY_STATE_RELEASE   3
 
 
+/* address of EEPROM */
+#define SOUS_VIDE_EEPROM_ADDR_TEMPERATURE           0x10
+#define SOUS_VIDE_EEPROM_ADDR_TIME                  0x20
 
+#define SOUS_VIDE_TEMPERATURE_MAX                   105
+#define SOUS_VIDE_TEMPERATURE_MIN                   1
+#define SOUS_VIDE_TIME_MAX                          999
+#define SOUS_VIDE_TIME_MIN                          1
 
